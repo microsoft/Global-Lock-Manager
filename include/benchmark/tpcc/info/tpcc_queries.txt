@@ -1,0 +1,326 @@
+ ===================
+ |  TPCC_DELIVERY  |
+ ===================
+
+    -------------------
+    | delivGetOrderId |
+    -------------------
+      SELECT NO_O_ID FROM NEWORDER
+       WHERE NO_D_ID = ?
+         AND NO_W_ID = ?
+    ORDER BY NO_O_ID ASC
+       LIMIT 1
+
+    -----------------------
+    | delivDeleteNewOrder |
+    -----------------------
+    DELETE FROM NEWORDER
+     WHERE NO_O_ID = ?
+       AND NO_D_ID = ?
+       AND NO_W_ID = ?
+
+    ------------------
+    | delivGetCustId |
+    ------------------
+    SELECT O_C_ID FROM OPENORDER
+     WHERE   O_ID = ?
+       AND O_D_ID = ?
+       AND O_W_ID = ?
+
+    ------------------------
+    | delivUpdateCarrierId |
+    ------------------------
+    UPDATE OPENORDER
+       SET O_CARRIER_ID = ?
+     WHERE   O_ID = ?
+       AND O_D_ID = ?
+       AND O_W_ID = ?
+
+    ---------------------------
+    | delivUpdateDeliveryDate |
+    ---------------------------
+    UPDATE ORDERLINE
+       SET OL_DELIVERY_D = ?
+     WHERE OL_O_ID = ?
+       AND OL_D_ID = ?
+       AND OL_W_ID = ?
+
+    -----------------------
+    | delivSumOrderAmount |
+    -----------------------
+    SELECT SUM(OL_AMOUNT) AS OL_TOTAL
+      FROM ORDERLINE
+     WHERE OL_O_ID = ?
+       AND OL_D_ID = ?
+       AND OL_W_ID = ?
+
+    ------------------------------
+    | delivUpdateCustBalDelivCnt |
+    ------------------------------
+    UPDATE CUSTOMER
+       SET C_BALANCE      = C_BALANCE + ?
+           C_DELIVERY_CNT = C_DELIVERY_CNT + 1
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND   C_ID = ?
+
+ ====================
+ |  TPCC_NEW_ORDER  |
+ ====================
+
+    -----------
+    | GetCust |
+    -----------
+    SELECT C_DISCOUNT, C_LAST, C_CREDIT
+      FROM CUSTOMER
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND   C_ID = ?
+
+    -----------
+    | GetWhse |
+    -----------
+    SELECT W_TAX
+      FROM WAREHOUSE
+     WHERE W_ID = ?
+
+    -----------
+    | GetDist |
+    -----------
+    SELECT D_NEXT_O_ID, D_TAX
+      FROM DISTRICT
+     WHERE D_W_ID = ?
+       AND   D_ID = ?
+       FOR UPDATE
+
+    ------------------
+    | InsertNewOrder |
+    ------------------
+      INSERT
+        INTO
+    NEWORDER(NO_O_ID, NO_D_ID, NO_W_ID)
+      VALUES(?, ?, ?)
+
+    --------------
+    | UpdateDist |
+    --------------
+    UPDATE DISTRICT
+       SET D_NEXT_O_ID = D_NEXT_O_ID + 1
+     WHERE D_W_ID = ?
+       AND   D_ID = ?
+
+    -------------------
+    | InsertOpenOrder |
+    -------------------
+       INSERT
+         INTO
+    OPENORDER(O_ID, O_D_ID, O_W_ID, O_C_ID, O_ENTRY_D, O_OL_CNT, O_ALL_LOCAL)
+       VALUES(?, ?, ?, ?, ?, ?, ?)
+
+    -----------
+    | GetItem |
+    -----------
+    SELECT I_PRICE, I_NAME , I_DATA
+      FROM ITEM
+     WHERE I_ID = ?
+
+    ------------
+    | GetStock |
+    ------------
+    SELECT S_QUANTITY, S_DATA,
+           S_DIST_01, S_DIST_02, S_DIST_03, S_DIST_04, S_DIST_05,
+           S_DIST_06, S_DIST_07, S_DIST_08, S_DIST_09, S_DIST_10
+      FROM STOCK
+     WHERE S_I_ID = ?
+       AND S_W_ID = ?
+       FOR UPDATE
+
+    ---------------
+    | UpdateStock |
+    ---------------
+    UPDATE STOCK
+       SET S_QUANTITY = ? ,
+           S_YTD = S_YTD + ?,
+           S_ORDER_CNT = S_ORDER_CNT + 1,
+           S_REMOTE_CNT = S_REMOTE_CNT + ?
+     WHERE S_I_ID = ?
+       AND S_W_ID = ?
+
+    -------------------
+    | InsertOrderLine |
+    -------------------
+       INSERT
+         INTO
+    ORDERLINE(OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID,
+              OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO)
+       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+ =======================
+ |  TPCC_ORDER_STATUS  |
+ =======================
+
+    -----------------------
+    | ordStatGetNewestOrd |
+    -----------------------
+      SELECT O_ID, O_CARRIER_ID, O_ENTRY_D
+        FROM OPENORDER
+       WHERE O_W_ID = ?
+         AND O_D_ID = ?
+         AND O_C_ID = ?
+    ORDER BY O_ID DESC
+       LIMIT 1
+
+    ------------------------
+    | ordStatGetOrderLines |
+    ------------------------
+    SELECT OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D
+      FROM ORDERLINE
+     WHERE OL_O_ID
+       AND OL_D_ID
+       AND OL_W_ID
+
+    --------------
+    | payGetCust |
+    --------------
+    SELECT C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2,
+           C_CITY, C_STATE, C_ZIP, C_PHONE, C_CREDIT, C_CREDIT_LIM,
+           C_DISCOUNT, C_BALANCE, C_YTD_PAYMENT, C_PAYMENT_CNT, C_SINCE
+      FROM CUSTOMER
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND   C_ID = ?
+
+    ------------------
+    | customerByName |
+    ------------------
+    SELECT C_FIRST, C_MIDDLE, C_ID, C_STREET_1, C_STREET_2, C_CITY,
+           C_STATE, C_ZIP, C_PHONE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT,
+           C_BALANCE, C_YTD_PAYMENT, C_PAYMENT_CNT, C_SINCE
+      FROM CUSTOMER
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND C_LAST = ?
+     ORDER BY C_FIRST
+
+ ==================
+ |  TPCC_PAYMENT  |
+ ==================
+
+    -----------------
+    | payUpdateWhse |
+    -----------------
+    UPDATE WAREHOUSE
+       SET W_YTD = W_YTD + ?
+     WHERE W_ID  = ?
+
+    --------------
+    | payGetWhse |
+    --------------
+    SELECT W_STREET_1, W_STREET_2, W_CITY, W_STATE, W_ZIP, W_NAME
+      FROM WAREHOUSE
+     WHERE W_ID = ?
+
+    -----------------
+    | payUpdateDist |
+    -----------------
+    UPDATE DISTRICT
+       SET D_YTD = D_YTD + ?
+     WHERE D_W_ID = ?
+       AND D_ID   = ?
+
+    --------------
+    | payGetDist |
+    --------------
+    SELECT D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP, D_NAME
+      FROM DISTRICT
+     WHERE D_W_ID = ?
+       AND D_ID   = ?
+
+    --------------
+    | payGetCust |
+    --------------
+    SELECT C_FIRST, C_MIDDLE, C_LAST, C_STREET_1, C_STREET_2,
+           C_CITY, C_STATE, C_ZIP, C_PHONE, C_CREDIT, C_CREDIT_LIM,
+           C_DISCOUNT, C_BALANCE, C_YTD_PAYMENT, C_PAYMENT_CNT, C_SINCE
+      FROM CUSTOMER
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND   C_ID = ?
+
+    -------------------
+    | payGetCustCdata |
+    -------------------
+    SELECT C_DATA
+      FROM CUSTOMER
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND   C_ID = ?
+
+    -------------------------
+    | payUpdateCustBalCdata |
+    -------------------------
+    UPDATE CUSTOMER
+       SET C_BALANCE = ?,
+           C_YTD_PAYMENT = ?,
+           C_PAYMENT_CNT = ?,
+           C_DATA = ?
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND   C_ID = ?
+
+    --------------------
+    | payUpdateCustBal |
+    --------------------
+    UPDATE CUSTOMER
+       SET C_BALANCE = ?,
+           C_YTD_PAYMENT = ?,
+           C_PAYMENT_CNT = ?
+     WHERE C_W_ID = ?
+       AND C_D_ID = ?
+       AND   C_ID = ?
+
+    ----------------
+    | payInsertHist|
+    ----------------
+     INSERT
+       INTO
+    HISTORY(H_C_D_ID, H_C_W_ID, H_C_ID, H_D_ID, H_W_ID,
+            H_DATE, H_AMOUNT, H_DATA)
+     VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+
+    ------------------
+    | customerByName |
+    ------------------
+      SELECT C_FIRST, C_MIDDLE, C_ID, C_STREET_1, C_STREET_2, C_CITY,
+             C_STATE, C_ZIP, C_PHONE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT,
+             C_BALANCE, C_YTD_PAYMENT, C_PAYMENT_CNT, C_SINCE
+        FROM CUSTOMER
+       WHERE C_W_ID = ?
+         AND C_D_ID = ?
+         AND C_LAST = ?
+    ORDER BY C_FIRST
+
+ ======================
+ |  TPCC_STOCK_LEVEL  |
+ ======================
+
+    ---------------------
+    | stockGetDistOrder |
+    ---------------------
+    SELECT D_NEXT_O_ID
+      FROM DISTRICT
+     WHERE D_W_ID = ?
+       AND D_ID = ?
+
+    ----------------------
+    | stockGetCountStock |
+    ----------------------
+    SELECT COUNT(DISTINCT (S_I_ID)) AS STOCK_COUNT
+      FROM ORDERLINE, STOCK
+     WHERE OL_W_ID = ?
+       AND OL_D_ID = ?
+       AND OL_O_ID < ?
+       AND OL_O_ID >= ?
+       AND S_W_ID = ?
+       AND S_I_ID = OL_I_ID
+       AND S_QUANTITY < ?
