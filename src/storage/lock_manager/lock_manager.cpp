@@ -300,6 +300,12 @@ void LockManager::remoteGetNodeLockHandlerThreadFunc() {
         // We sleep to simulate the network delay between the nodes.
         waitInNanosecs(NODE_LOCK_REQUEST_MIN_LATENCY_IN_MICROSEC * 1000);
 
+        if (isFile(msg.objId) && msg.objId >= fileIdToFileLocksMap.size()) {
+            msg.payload = response_status_t::FAILURE;
+            while (!responsesQueue.push(msg));
+            continue;
+        }
+
         auto nodeModeReq = (lock_mode_t) msg.payload;
         if (enableLogging) {
             logger->info("Handling (objId:{}, LockMode:{}) ...", msg.objId,
@@ -395,7 +401,7 @@ void LockManager::deserializeRequestFromRecvBuffer(request_msg_t& response) {
 
 void LockManager::serializeResponseToSendBuffer(request_msg_t& response) {
     ((uint64_t*) sendBuffer.get())[0u] = response.objId;
-    ((uint64_t*) sendBuffer.get())[1u] = response.timestamp;
+    ((uint64_t*) sendBuffer.get())[1u] = getTimestamp();
     sendBuffer[16u] = response.payload;
 }
 
