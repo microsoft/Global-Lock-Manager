@@ -401,7 +401,7 @@ void LockManager::deserializeRequestFromRecvBuffer(request_msg_t& response) {
 
 void LockManager::serializeResponseToSendBuffer(request_msg_t& response) {
     ((uint64_t*) sendBuffer.get())[0u] = response.objId;
-    ((uint64_t*) sendBuffer.get())[1u] = getTimestamp();
+    ((uint64_t*) sendBuffer.get())[1u] = response.timestamp;
     sendBuffer[16u] = response.payload;
 }
 
