@@ -300,6 +300,12 @@ void LockManager::remoteGetNodeLockHandlerThreadFunc() {
         // We sleep to simulate the network delay between the nodes.
         waitInNanosecs(NODE_LOCK_REQUEST_MIN_LATENCY_IN_MICROSEC * 1000);
 
+        if (isFile(msg.objId) && msg.objId >= fileIdToFileLocksMap.size()) {
+            msg.payload = response_status_t::FAILURE;
+            while (!responsesQueue.push(msg));
+            continue;
+        }
+
         auto nodeModeReq = (lock_mode_t) msg.payload;
         if (enableLogging) {
             logger->info("Handling (objId:{}, LockMode:{}) ...", msg.objId,

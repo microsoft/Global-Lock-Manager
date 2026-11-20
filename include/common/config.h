@@ -31,7 +31,8 @@ constexpr uint32_t NODE_LOCK_REQUEST_MIN_LATENCY_IN_MICROSEC    =  10u;
 constexpr uint32_t NODE_LOCK_HELD_DURATION_DEAD_TIME_MULTIPLIER = 100u;
 constexpr uint32_t REQUEST_MSG_SIZE  = /* 17 bytes */
     sizeof(obj_id_t) + sizeof(timestamp_t) + sizeof(uint8_t);
-constexpr uint32_t RESPONSE_MSG_SIZE = /*  9 bytes */
-    sizeof(obj_id_t) + sizeof(uint8_t);
+// Responses include the server timestamp used to calculate lock hold timing.
+constexpr uint32_t RESPONSE_MSG_SIZE = /* 17 bytes */
+    sizeof(obj_id_t) + sizeof(timestamp_t) + sizeof(uint8_t);
 
 } // namespace common
